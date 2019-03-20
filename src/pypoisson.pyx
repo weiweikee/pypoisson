@@ -109,11 +109,11 @@ cdef _poisson_reconstruction(np.float64_t[:, ::1] points, np.float64_t[:, ::1] n
 
     cdef:
         char **c_argv
-        string arg_depth = str(depth)
-        string arg_full_depth = str(full_depth)
-        string arg_scale = str(scale)
-        string arg_samples_per_node = str(samples_per_node)
-        string arg_cg_depth = str(cg_depth)
+        string arg_depth = (str(depth)).encode(encoding='UTF-8')
+        string arg_full_depth = (str(full_depth)).encode(encoding='UTF-8')
+        string arg_scale = (str(scale)).encode(encoding='UTF-8')
+        string arg_samples_per_node = (str(samples_per_node)).encode(encoding='UTF-8')
+        string arg_cg_depth = (str(cg_depth)).encode(encoding='UTF-8')
 
 
     int_data.clear()
@@ -142,8 +142,11 @@ cdef _poisson_reconstruction(np.float64_t[:, ::1] points, np.float64_t[:, ::1] n
         args += ["--density"]
 
     c_argv = <char**> malloc(sizeof(char*) * len(args))
-    for idx, s in enumerate(args):
-        c_argv[idx] = s
+
+    for i in range(len(args)):
+        if type(args[i]) == str:
+            args[i] = args[i].encode(encoding='UTF-8')
+        c_argv[i] = args[i]
 
     try:
         PoissonReconLibMain(len(args), c_argv)
@@ -152,8 +155,8 @@ cdef _poisson_reconstruction(np.float64_t[:, ::1] points, np.float64_t[:, ::1] n
 
 
     face_cols, vertex_cols = 3, 3
-    face_rows = int_data.size() / face_cols
-    vertex_rows = double_data.size() / vertex_cols
+    face_rows = int(int_data.size() / face_cols)
+    vertex_rows = int(double_data.size() / vertex_cols)
 
     cdef int *ptr_faces = &int_data[0]
     cdef double *ptr_vertices = &double_data[0]
